@@ -9,7 +9,6 @@ def maxrepeat(s):
     # split at each possible point
     for offset in range(1, len(s) - 1):
         start = 0
-
         # compare elements offset by this distance
         last = len(s) - offset
         for i in range(last):
@@ -21,21 +20,17 @@ def maxrepeat(s):
 
             # substring has ended
             if i == last - 1:
-                i += 1
-            if len(current) > len(best):
-                best = current
-                occurrences = defaultdict(
-                    set, {tuple(best) : {
-                        (start, i),
-                        (start + offset, i + offset)
-                    }})
-            elif len(current) == len(best) and len(best) > 0:
-                occurrences[tuple(current)].add((start, i))
-                occurrences[tuple(current)].add((start + offset, i + offset))
-
+                end = i + 1
+            else:
+                end = i
+            if len(current) > 1:
+                occurrences[tuple(current)].add((start, end))
+                occurrences[tuple(current)].add((start + offset, end + offset))
             start = i + 1
             current = []
 
-    return max(occurrences.items(), key=lambda x: len(x[0]) * len(x[1]))
-
+    return sorted(
+                  [(k, list(v)) for k, v in occurrences.items()],
+                  key=lambda x: len(x[0]) * len(x[1]), reverse=True
+    )
 
