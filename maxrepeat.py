@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict
 """
 maxrepeat(s) finds all occurrences of max length repeated substring in s
