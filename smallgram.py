@@ -9,10 +9,7 @@ from maxrepeat import *
 from symbols import *
 
 D_MAX = 3
-WIDTH = 20  # 20 might take a long time...
-
-time_maxrepeat = 0.
-time_replace = 0.
+WIDTH = 25  # more than 10 might take a long time...
 
 """
 compressGrammar(startRHS, rules, depth)
@@ -24,39 +21,29 @@ depth       int     current depth in search tree
 returns (new startRHS, new rules)
 """
 def compressGrammar(startRHS, rules, depth):
-    global time_maxrepeat
-    global time_replace
     if len(rules) == 0:
         nextRule = 1
     else:
         nextRule = max(r.number for r in rules) + 1
 
     while True:
-        t0 = time.time()
         candidates = maxrepeat(startRHS)
-        time_maxrepeat += time.time() - t0
-
         if len(candidates) > WIDTH:
             candidates = candidates[: WIDTH]
         if len(candidates) < 1:
             return startRHS, rules
 
         if depth > D_MAX:
-            t0 = time.time()
             newStart, newRule = replace(
                 startRHS, candidates[0][0], candidates[0][1], nextRule
             )
-            time_replace += time.time() - t0
-
             rules.append(newRule)
             return compressGrammar(newStart, rules, depth + 1)
         else:
             # descend the tree
             minLen = sys.maxint
             for c in candidates:
-                t0 = time.time()
                 newStart, newRule = replace(startRHS, c[0], c[1], nextRule)
-                time_replace += time.time() - t0
 
                 newRules = rules + [newRule]
                 candStart, candRules = compressGrammar(

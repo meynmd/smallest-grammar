@@ -1,4 +1,5 @@
 from smallgram import *
+import time
 
 # read in a music file
 s = music21.converter.parse('bf10i.krn')
@@ -13,16 +14,20 @@ for i, n in enumerate(s.parts[0].flat.notes):
                 music21.interval.notesToGeneric(prevNote, n).simpleDirected
             )
             prevNote = n
+print 'input: {}\n'.format(notes)
 
-print 'input: {}'.format(notes)
-
+# run the compression algorithm
+t0 = time.time()
 initRHS, rules = compressGrammar(notes, [], 0)
+
+# format it more nicely
 rules = cleanupRuleNums(rules)
-
-
+print 'Time to compute grammar: {} seconds\n'.format(time.time() - t0)
+print 'Grammar length: {}'.format(gramLength(initRHS, rules))
 startRule = Production('S', 0, initRHS)
 rules.insert(0, startRule)
 for r in rules:
     printRule(r)
 
-print 'max repeat time: {}\nreplace time: {}'.format(time_maxrepeat, time_replace)
+
+
