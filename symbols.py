@@ -7,4 +7,5 @@ class Production:
         self.number = num
         Production.RuleNum += 1
 
-
+    def __str__(self):
+        return 'R' + str(self.number)
