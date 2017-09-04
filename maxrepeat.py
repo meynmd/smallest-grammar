@@ -20,13 +20,6 @@ def maxrepeat(s):
                 if i < last - 1:
                     continue
 
-            # substring has ended
-            # if i == last - 1:
-            #     end = i + 1
-            # else:
-            #     end = i
-            # end = i + 1
-
             if len(current) > 1:
                 occurrences[tuple(current)].add((start, end))
                 occurrences[tuple(current)].add((start + offset, end + offset))

@@ -4,7 +4,7 @@ from maxrepeat import *
 from symbols import *
 
 D_MAX = 3
-WIDTH = 5  # more than 10 might take a long time...
+WIDTH = 10  # more than 10 might take a long time...
 
 """
 compressGrammar(startRHS, rules, depth)
@@ -15,52 +15,46 @@ depth       int     current depth in search tree
 
 returns (new startRHS, new rules)
 """
-def compressGrammar(startRHS, rules, depth):
+def compressGrammar(rules, depth):
     log = ''
     finalLog = ''
-    # choose the next available rule number
-    if len(rules) == 0:
-        nextRule = 1
-    else:
-        nextRule = max(r.number for r in rules) + 1
 
     while True:
         # look for any max repeats to replace
-        candidates = maxrepeat(startRHS)
+        candidates = maxrepeat(rules)
         if len(candidates) > WIDTH:
             candidates = candidates[: WIDTH]
         if len(candidates) < 1:
-            return startRHS, rules, ''
+            return rules, ''
 
         if depth > D_MAX:
             # depth limit exceeded: make greedy substitution
-            newStart, newRule, log = replace(
-                startRHS, candidates[0][0], candidates[0][1], nextRule, log
+            newGram, log = replace(
+                rules, candidates[0][0], candidates[0][1], log
             )
-            rules.append(newRule)
-            resStart, resRule, resLog = compressGrammar(newStart, rules, depth + 1)
-            return resStart, resRule, log + resLog
+            resRule, resLog = compressGrammar(newGram, depth + 1)
+            return resRule, log + resLog
         else:
             # descend the tree
             minLen = sys.maxint
             for c in candidates:
-                newStart, newRule, log = replace(startRHS, c[0], c[1], nextRule, log)
-
-                newRules = rules + [newRule]
-                candStart, candRules, endLog = compressGrammar(
-                    newStart, newRules, depth + 1
+                newGram, log = replace(rules, c[0], c[1], log)
+                candRules, endLog = compressGrammar(
+                    newGram, depth + 1
                 )
-                if gramLength(candStart, candRules) < minLen:
-                    minLen = gramLength(candStart, candRules)
-                    minGram = candStart, candRules
+                if gramLength(candRules) < minLen:
+                    minLen = gramLength(candRules)
+                    minGram = candRules
                     finalLog = log + endLog
-            return minGram[0], minGram[1], finalLog
+            return minGram, finalLog
 
 
-def gramLength(start, rules):
-    return len(start) + \
-           sum([len(r.rhs) for r in rules]) + \
-           len(rules) + 1
+def gramLength(rules):
+    # return len(start) + \
+    #        sum([len(r.rhs) for r in rules]) + \
+    #        len(rules) + 1
+    s = []
+    return len(rules)
 
 
 """
@@ -73,25 +67,27 @@ ruleNum     what number should we give the resulting rule?
 
 returns (new string, new rule)
 """
-def replace(fullstr, substr, locations, ruleNum, log=None):
-    if log is not None:
-        log = 'S -> ' + str([str(s) for s in fullstr]) + '\n'
-        log += 'replacing ' + str([str(s) for s in substr]) + '\nwith R{}\n'.format(ruleNum)
-
+def replace(fullstr, substr, locations, log=None):
     g = deepcopy(fullstr)
-    newRule = Production('R', ruleNum, substr)
+    newRule = Production('R', rhs=substr)
     for start, end in locations:
         for i in range(start, end):
             g[i] = None
-        g[start] = newRule
+        g[start] = 'R{}'.format(newRule.number)
 
     while None in g:
         g.remove(None)
 
+    g.append(Separator('R{}'.format(newRule.number)))
+    g += substr
+
+
     if log is None:
-        return g, newRule
+        return g
     else:
-        return g, newRule, log
+        log = 'S -> ' + str([str(s) for s in fullstr]) + '\n'
+        log += 'replacing ' + str([str(s) for s in substr]) + '\n\twith R{}\n\n'.format(newRule.number)
+        return g, log
 
 
 # not using this anymore
@@ -104,6 +100,31 @@ def grammarToList(grammarDictionary):
         grammarList += val
 
     return grammarList
+
+
+def stringify(rules):
+    gramList = []
+    for rule in rules:
+        gramList += [s for s in rule]
+        gramList.append(Separator())
+    return gramList
+
+
+def listToDict(gramList):
+    rules = {}
+    lhs = None
+    rhs = []
+    for sym in gramList:
+        if isinstance(sym, Separator):
+            if lhs is not None:
+                rules[lhs.name] = rhs
+                lhs = sym.name
+                rhs = []
+            lhs = sym
+        else:
+            rhs.append(sym)
+    rules[lhs.name] = rhs
+    return rules
 
 
 def printRule(rule):
