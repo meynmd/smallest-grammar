@@ -4,7 +4,7 @@ from maxrepeat import *
 from symbols import *
 
 D_MAX = 3
-WIDTH = 10  # more than 10 might take a long time...
+WIDTH = 3  # more than 10 might take a long time...
 
 """
 compressGrammar(startRHS, rules, depth)
@@ -15,7 +15,7 @@ depth       int     current depth in search tree
 
 returns (new startRHS, new rules)
 """
-def compressGrammar(rules, depth):
+def compressGrammar(rules, depth, ruleNum=1):
     log = ''
     finalLog = ''
 
@@ -30,31 +30,25 @@ def compressGrammar(rules, depth):
         if depth > D_MAX:
             # depth limit exceeded: make greedy substitution
             newGram, log = replace(
-                rules, candidates[0][0], candidates[0][1], log
+                rules, candidates[0][0], candidates[0][1], log, ruleNum
             )
-            resRule, resLog = compressGrammar(newGram, depth + 1)
+            ruleNum += 1
+            resRule, resLog = compressGrammar(newGram, depth + 1, ruleNum)
             return resRule, log + resLog
         else:
             # descend the tree
             minLen = sys.maxint
             for c in candidates:
-                newGram, log = replace(rules, c[0], c[1], log)
+                newGram, log = replace(rules, c[0], c[1], log, ruleNum)
+                ruleNum += 1
                 candRules, endLog = compressGrammar(
-                    newGram, depth + 1
+                    newGram, depth + 1, ruleNum
                 )
-                if gramLength(candRules) < minLen:
-                    minLen = gramLength(candRules)
+                if len(candRules) < minLen:
+                    minLen = len(candRules)
                     minGram = candRules
                     finalLog = log + endLog
             return minGram, finalLog
-
-
-def gramLength(rules):
-    # return len(start) + \
-    #        sum([len(r.rhs) for r in rules]) + \
-    #        len(rules) + 1
-    s = []
-    return len(rules)
 
 
 """
@@ -67,39 +61,25 @@ ruleNum     what number should we give the resulting rule?
 
 returns (new string, new rule)
 """
-def replace(fullstr, substr, locations, log=None):
+def replace(fullstr, substr, locations, log=None, num=0):
     g = deepcopy(fullstr)
-    newRule = Production('R', rhs=substr)
     for start, end in locations:
         for i in range(start, end):
             g[i] = None
-        g[start] = 'R{}'.format(newRule.number)
+        g[start] = 'R{}'.format(num)
 
     while None in g:
         g.remove(None)
 
-    g.append(Separator('R{}'.format(newRule.number)))
+    g.append(Separator('R{}'.format(num)))
     g += substr
-
 
     if log is None:
         return g
     else:
         log = 'S -> ' + str([str(s) for s in fullstr]) + '\n'
-        log += 'replacing ' + str([str(s) for s in substr]) + '\n\twith R{}\n\n'.format(newRule.number)
+        log += 'replacing ' + str([str(s) for s in substr]) + '\n\twith R{}\n\n'.format(num)
         return g, log
-
-
-# not using this anymore
-def grammarToList(grammarDictionary):
-    grammarList = []
-    count = 0
-    for key, val in grammarDictionary.items():
-        count += 1
-        grammarList.append(key)
-        grammarList += val
-
-    return grammarList
 
 
 def stringify(rules):
