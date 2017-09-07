@@ -20,7 +20,7 @@ import music21
 if len(sys.argv) > 1:
     path = sys.argv[1]
 else:
-    path = '.'
+    path = None
 if len(sys.argv) > 2:
     voice = int(sys.argv[2])
 else:
@@ -28,16 +28,35 @@ else:
 
 inputs = []
 descriptors = []
-for f in glob(path + '/*.krn'):
-    s = music21.converter.parse(f)
-    for j, part in enumerate(s.parts):
-        # inputs.append(part.flat.notes)
+if path is None:
+    for f in glob('./*.krn'):
+        s = music21.converter.parse(f)
+        for j, part in enumerate(s.parts):
+            # inputs.append(part.flat.notes)
+            inputs.append([
+                n for n in part.flat.elements
+                    if isinstance(n, music21.note.Note)
+                    or isinstance(n, music21.chord.Chord)
+            ])
+            descriptors.append('{}, voice {}'.format(s.metadata.title, j))
+else:
+    s = music21.converter.parse(path)
+    if voice is None:
+        for j, part in enumerate(s.parts):
+            # inputs.append(part.flat.notes)
+            inputs.append([
+                n for n in part.flat.elements
+                    if isinstance(n, music21.note.Note)
+                    or isinstance(n, music21.chord.Chord)
+            ])
+            descriptors.append('{}, voice {}'.format(s.metadata.title, j))
+    else:
         inputs.append([
-            n for n in part.flat.elements
+            n for n in s.parts[voice].flat.elements
                 if isinstance(n, music21.note.Note)
                 or isinstance(n, music21.chord.Chord)
         ])
-        descriptors.append('{}, voice {}'.format(s.metadata.title, j))
+        descriptors.append('{}, voice {}'.format(s.metadata.title, voice))
 
 inputNotes = []
 inputRules = []
@@ -87,6 +106,7 @@ for k, v in gramList:
     for s in v:
         print '{}'.format(s),
     print
+print
 
 
 # re-generate the original input string, minus accidentals
@@ -111,19 +131,12 @@ for i in range(len(firstNotes)):
     for sym in generatedIntervals:
         if type(sym) is str:
             genOut.append(sym)
-
-            print sym,
-
         else:
             n = deepcopy(genNotes[-1])
             noteStream.append(n)
             n.transpose(music21.interval.GenericInterval(sym), inPlace=True)
             genNotes.append(n)
             genOut.append(n.pitch.name)
-
-            print n.pitch.name,
-
-    print
 
     # print the string and its derivation
     genStr = []
