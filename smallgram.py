@@ -4,7 +4,7 @@ from maxrepeat import *
 from symbols import *
 
 D_MAX = 3
-WIDTH = 3  # more than 10 might take a long time...
+WIDTH = 5  # more than 10 might take a long time...
 
 """
 compressGrammar(startRHS, rules, depth)
