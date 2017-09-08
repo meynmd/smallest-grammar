@@ -127,7 +127,7 @@ for i in range(len(firstNotes)):
     noteStream = music21.stream.Stream()
     noteStream.append(firstNotes[i])
     genNotes = [firstNotes[i]]
-    genOut = [firstNotes[i].pitch.name]
+    genOut = [firstNotes[i].pitch.step]
     for sym in generatedIntervals:
         if type(sym) is str:
             genOut.append(sym)
@@ -136,7 +136,7 @@ for i in range(len(firstNotes)):
             noteStream.append(n)
             n.transpose(music21.interval.GenericInterval(sym), inPlace=True)
             genNotes.append(n)
-            genOut.append(n.pitch.name)
+            genOut.append(n.pitch.step)
 
     # print the string and its derivation
     genStr = []
