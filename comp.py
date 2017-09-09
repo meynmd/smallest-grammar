@@ -90,8 +90,12 @@ for j, inp in enumerate(inputs):
 t0 = time.time()
 rules, log = compressGrammar(inputRules, 1)
 
+inpLen = sum(len(n) for n in inputs)
 print '\nTime to compute grammar: {} seconds\n'.format(time.time() - t0)
-print 'Grammar length: {}\n\nProduction rules:'.format(len(rules))
+print 'Input length: {}'.format(inpLen)
+print 'Grammar length: {}'.format(len(rules))
+print 'Compression: {}'.format(float(inpLen) / len(rules))
+print '\nGrammar rules:'
 
 # format as a dictionary
 gramDict = listToDict(rules)
@@ -140,7 +144,7 @@ for i in range(len(firstNotes)):
 
     # print the string and its derivation
     genStr = []
-    print '\n{}:'.format(descriptors[i])
+    print '\n\n{}:'.format(descriptors[i])
     for n in genOut:
         if n.isalpha():
             print n,
