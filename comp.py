@@ -8,15 +8,12 @@ grammar size for Fugue #10 in paper is 217
 import time
 import sys
 import re
+import pickle
 from glob import glob
 from smallgram import *
 import music21
 
 # read in a music file
-# if len(sys.argv) > 1:
-#     s = music21.converter.parse(sys.argv[1])
-# else:
-#     s = music21.converter.parse('bf10i.krn')
 if len(sys.argv) > 1:
     path = sys.argv[1]
 else:
@@ -25,6 +22,10 @@ if len(sys.argv) > 2:
     voice = int(sys.argv[2])
 else:
     voice = None
+if len(sys.argv) > 3:
+    outFile = sys.argv[3]
+else:
+    outFile = None
 
 inputs = []
 descriptors = []
@@ -65,7 +66,6 @@ for j, inp in enumerate(inputs):
     prevNote = None
     intervals = []
     firstNotes.append(inp[0])
-    # descriptors.append('{}, voice {}'.format(None, j))
     for i, n in enumerate(inp):
         if type(n) == music21.note.Note:
             if prevNote is None:
@@ -99,6 +99,12 @@ print '\nGrammar rules:'
 
 # format as a dictionary
 gramDict = listToDict(rules)
+if outFile is not None:
+    with open(outFile, 'w') as fp:
+        # p = pickle.Pickler(outFile)
+        pickle.dump(gramDict, fp)
+
+# format as a list
 numRE = re.compile('[\d]+')
 gramList = sorted(
     gramDict.items(),
@@ -174,3 +180,4 @@ for i in range(len(firstNotes)):
 
 # print "\033[1;37;48m\n\nlog:"
 # print log
+
