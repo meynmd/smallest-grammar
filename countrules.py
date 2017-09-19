@@ -10,7 +10,10 @@ with open(argv[1], 'r') as fp:
     grammar = readGram(fp.readlines())
 
 startSymbols = [s for s in grammar.keys() if s[0] == 'S']
-derived = [['({}'.format(ss)] + reexpand(ss, music21.note.Note(), grammar)[0] + ['{})'.format(ss)] for ss in startSymbols]
+derived = [
+    ['({}'.format(ss)] + reexpand(ss, music21.note.Note(), grammar)[0] + ['{})'.format(ss)]
+           for ss in startSymbols
+]
 ruleCountDict = defaultdict(lambda: defaultdict(int))
 ruleOccurDict = defaultdict(list)
 
@@ -20,13 +23,20 @@ def enumRule(rhs, name):
     for i, sym in enumerate(rhs):
         if sym[0] == '(':
             if sym[1:] not in ruleOccurDict:
-                inner = enumRule(rhs[i + 1:], sym[1:])
-                ruleOccurDict[sym[1:]] = inner
+
+                # inner = enumRule(rhs[i + 1:], sym[1:])
+
+                enumRule(rhs[i + 1:], sym[1:])
+
+                # ruleOccurDict[sym[1:]] = inner
         elif sym[-1] == ')':
             if sym[:-1] == name:
-                return out
+                ruleOccurDict[sym[:-1]] = out
+                return
+                # return out
         else:
             out.append(sym)
+
 
 
 for ss in derived:
@@ -44,6 +54,19 @@ for i, line in enumerate(cleaned):
 for r, lhs_count in ruleCountDict.items():
     print '{}:\t'.format(r),
     print ruleOccurDict[r]
+    total = 0
+    occurrences = []
     for lhs, count in lhs_count.items():
-        print '\t{}: {}'.format(lhs, count)
+        occurrences.append('{}:\t{}'.format(lhs, count))
+        total += count
+    for occ in occurrences:
+        print '\t{}'.format(occ)
+    if total > 10 and len(lhs_count.keys()) > 4 and len(lhs) > 3:
+        frag = music21.stream.Stream()
+        for n in ruleOccurDict[r]:
+            frag.append(music21.note.Note(n))
+        occurString = '\n'.join(occurrences)
+        frag.metadata = music21.metadata.Metadata(title='{}\n{}'.format(r, occurString))
+        frag.show(app='~/MuseScore-2.1-x86_64.AppImage')
+
     print

@@ -176,7 +176,9 @@ for i in range(len(firstNotes)):
                 print 'Error reproducing pitch #{}.'.format(k)
                 print '\tDerived: {}\tExpected: {}'.format(genStr[k], inputs[i][k].pitch.step)
 
-    print "\033[1;37;48m\n"
+    print "\033[1;32;48m\n"
+
+print "\033[1;32;48m\n"
 
 # print "\033[1;37;48m\n\nlog:"
 # print log
