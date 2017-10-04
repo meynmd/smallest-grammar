@@ -1,10 +1,12 @@
 import sys
 from copy import deepcopy
 from maxrepeat import *
+from maxrep import *
 from symbols import *
 
 D_MAX = 3
 WIDTH = 5  # more than 10 might take a long time...
+SILLY_DEPTH = 500
 
 """
 compressGrammar(startRHS, rules, depth)
@@ -19,9 +21,15 @@ def compressGrammar(rules, depth, ruleNum=1):
     log = ''
     finalLog = ''
 
+    # if depth > SILLY_DEPTH:
+    #     print 'This is going WAYYY too deep!'
+    #     exit(1)
+    # if depth <= D_MAX:
+    #     print '\t'*depth, 'depth {}'.format(depth)
+
     while True:
         # look for any max repeats to replace
-        candidates = maxrepeat(rules)
+        candidates = [ss for ss in maxrep(rules)]
         if len(candidates) > WIDTH:
             candidates = candidates[: WIDTH]
         if len(candidates) < 1:
@@ -30,7 +38,7 @@ def compressGrammar(rules, depth, ruleNum=1):
         if depth > D_MAX:
             # depth limit exceeded: make greedy substitution
             newGram, log = replace(
-                rules, candidates[0][0], candidates[0][1], log, ruleNum
+                rules, candidates[0], log, ruleNum
             )
             ruleNum += 1
             resRule, resLog = compressGrammar(newGram, depth + 1, ruleNum)
@@ -38,8 +46,10 @@ def compressGrammar(rules, depth, ruleNum=1):
         else:
             # descend the tree
             minLen = sys.maxint
-            for c in candidates:
-                newGram, log = replace(rules, c[0], c[1], log, ruleNum)
+            for i, c in enumerate(candidates):
+                # if depth < D_MAX:
+                #     print '\t'*(depth+1), 'evaluating candidate#{}: {}'.format(i, c)
+                newGram, log = replace(rules, c, log, ruleNum)
                 ruleNum += 1
                 candRules, endLog = compressGrammar(
                     newGram, depth + 1, ruleNum
@@ -61,12 +71,32 @@ ruleNum     what number should we give the resulting rule?
 
 returns (new string, new rule)
 """
-def replace(fullstr, substr, locations, log=None, num=0):
+def replace(fullstr, substr, log=None, num=0):
     g = deepcopy(fullstr)
-    for start, end in locations:
-        for i in range(start, end):
-            g[i] = None
-        g[start] = 'R{}'.format(num)
+
+    match = False
+    for i, ch in enumerate(fullstr):
+        if match == False:
+            if ch == substr[0]:
+                match = True
+                ss_idx = 1
+        else:
+            if ss_idx == len(substr):
+                for j in range(i - len(substr), i):
+                    g[j] = None
+                g[i - len(substr)] = 'R{}'.format(num)
+                match = False
+            else:
+                if ch == substr[ss_idx]:
+                    ss_idx += 1
+                else:
+                    match = False
+
+
+    # for start, end in locations:
+    #     for i in range(start, end):
+    #         g[i] = None
+    #     g[start] = 'R{}'.format(num)
 
     while None in g:
         g.remove(None)
